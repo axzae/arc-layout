@@ -3,6 +3,7 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("org.jlleitschuh.gradle.ktlint")
 }
 
 android {
@@ -26,6 +27,10 @@ android {
             proguardFile(getDefaultProguardFile("proguard-android.txt"))
             proguardFile("proguard-rules.pro")
         }
+    }
+
+    buildFeatures {
+        viewBinding = true
     }
 
     kotlinOptions {

@@ -1,67 +1,54 @@
-package com.github.florent37.arclayout.manager;
+package com.github.florent37.arclayout.manager
 
-import android.graphics.Color;
-import android.graphics.Paint;
-import android.graphics.Path;
-import androidx.annotation.Nullable;
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.Path
 
-public class ClipPathManager implements ClipManager {
+class ClipPathManager : ClipManager {
 
-    protected final Path path = new Path();
-    private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private val path = Path()
+    override val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+    private var createClipPath: ClipPathCreator? = null
 
-    private ClipPathCreator createClipPath = null;
-
-    public ClipPathManager() {
-        paint.setColor(Color.BLACK);
-        paint.setStyle(Paint.Style.FILL);
-        paint.setAntiAlias(true);
-        paint.setStrokeWidth(1);
+    init {
+        paint.color = Color.BLACK
+        paint.style = Paint.Style.FILL
+        paint.isAntiAlias = true
+        paint.strokeWidth = 1f
     }
 
-    public Paint getPaint() {
-        return paint;
+    override fun requiresBitmap(): Boolean {
+        return createClipPath != null && createClipPath!!.requiresBitmap()
     }
 
-    @Override
-    public boolean requiresBitmap() {
-        return createClipPath != null && createClipPath.requiresBitmap();
-    }
-
-    @Nullable
-    protected Path createClipPath(int width, int height) {
-        if (createClipPath != null) {
-            return createClipPath.createClipPath(width, height);
+    private fun createClipPath(width: Int, height: Int): Path? {
+        return if (createClipPath != null) {
+            createClipPath!!.createClipPath(width, height)
+        } else {
+            null
         }
-        return null;
     }
 
-    public void setClipPathCreator(ClipPathCreator createClipPath) {
-        this.createClipPath = createClipPath;
+    fun setClipPathCreator(createClipPath: ClipPathCreator?) {
+        this.createClipPath = createClipPath
     }
 
-    @Override
-    public Path createMask(int width, int height) {
-        return path;
+    override fun createMask(width: Int, height: Int): Path {
+        return path
     }
 
-    @Nullable
-    @Override
-    public Path getShadowConvexPath() {
-        return path;
-    }
+    override val shadowConvexPath: Path get() = path
 
-    @Override
-    public void setupClipLayout(int width, int height) {
-        path.reset();
-        final Path clipPath = createClipPath(width, height);
+    override fun setupClipLayout(width: Int, height: Int) {
+        path.reset()
+        val clipPath = createClipPath(width, height)
         if (clipPath != null) {
-            path.set(clipPath);
+            path.set(clipPath)
         }
     }
 
-    public interface ClipPathCreator {
-        Path createClipPath(int width, int height);
-        boolean requiresBitmap();
+    interface ClipPathCreator {
+        fun createClipPath(width: Int, height: Int): Path?
+        fun requiresBitmap(): Boolean
     }
 }

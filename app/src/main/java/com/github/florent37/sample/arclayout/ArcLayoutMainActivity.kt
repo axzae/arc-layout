@@ -1,13 +1,16 @@
-package com.github.florent37.sample.arclayout;
+package com.github.florent37.sample.arclayout
 
-import android.os.Bundle;
-import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
+import com.github.florent37.sample.arclayout.databinding.ArclayoutActivityMainBinding
 
-public class ArcLayoutMainActivity extends AppCompatActivity {
+class ArcLayoutMainActivity : AppCompatActivity() {
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.arclayout_activity_main);
+    private lateinit var binding: ArclayoutActivityMainBinding
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        binding = ArclayoutActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
     }
 }

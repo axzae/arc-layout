@@ -1,21 +1,12 @@
-package com.github.florent37.arclayout.manager;
+package com.github.florent37.arclayout.manager
 
-import android.graphics.Paint;
-import android.graphics.Path;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+import android.graphics.Paint
+import android.graphics.Path
 
-public interface ClipManager {
-
-    @NonNull
-    Path createMask(int width, int height);
-
-    @Nullable
-    Path getShadowConvexPath();
-
-    void setupClipLayout(int width, int height);
-
-    Paint getPaint();
-
-    boolean requiresBitmap();
+interface ClipManager {
+    fun createMask(width: Int, height: Int): Path
+    val shadowConvexPath: Path?
+    fun setupClipLayout(width: Int, height: Int)
+    val paint: Paint
+    fun requiresBitmap(): Boolean
 }

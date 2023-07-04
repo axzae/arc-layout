@@ -1,222 +1,178 @@
-package com.github.florent37.arclayout;
+package com.github.florent37.arclayout
 
-import android.annotation.TargetApi;
-import android.content.Context;
-import android.content.res.Resources;
-import android.content.res.TypedArray;
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Outline;
-import android.graphics.Paint;
-import android.graphics.Path;
-import android.graphics.PorterDuff;
-import android.graphics.PorterDuffXfermode;
-import android.graphics.drawable.Drawable;
-import android.os.Build;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.core.view.ViewCompat;
-import androidx.appcompat.content.res.AppCompatResources;
-import android.util.AttributeSet;
-import android.util.TypedValue;
-import android.view.View;
-import android.view.ViewOutlineProvider;
-import android.widget.FrameLayout;
+import android.content.Context
+import android.content.res.Resources
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Outline
+import android.graphics.Paint
+import android.graphics.Path
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffXfermode
+import android.graphics.drawable.Drawable
+import android.os.Build
+import android.util.AttributeSet
+import android.util.TypedValue
+import android.view.View
+import android.view.ViewOutlineProvider
+import android.widget.FrameLayout
+import androidx.appcompat.content.res.AppCompatResources
+import androidx.core.view.ViewCompat
+import com.github.florent37.arclayout.manager.ClipManager
+import com.github.florent37.arclayout.manager.ClipPathManager
+import com.github.florent37.arclayout.manager.ClipPathManager.ClipPathCreator
 
-import com.github.florent37.arclayout.manager.ClipManager;
-import com.github.florent37.arclayout.manager.ClipPathManager;
+open class ShapeOfView @JvmOverloads constructor(
+    context: Context,
+    attrs: AttributeSet? = null,
+    defStyleAttr: Int = 0,
+) : FrameLayout(context, attrs, defStyleAttr) {
 
-public abstract class ShapeOfView extends FrameLayout {
+    private val clipPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val clipPath = Path()
+    private var pdMode = PorterDuffXfermode(PorterDuff.Mode.DST_OUT)
+    private var drawable: Drawable? = null
+    private val clipManager: ClipManager = ClipPathManager()
+    private var requiersShapeUpdate = true
+    private var clipBitmap: Bitmap? = null
+    private val rectView = Path()
 
-    private final Paint clipPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-    private final Path clipPath = new Path();
-
-    protected PorterDuffXfermode pdMode = new PorterDuffXfermode(PorterDuff.Mode.DST_OUT);
-
-    @Nullable
-    protected Drawable drawable = null;
-    private ClipManager clipManager = new ClipPathManager();
-    private boolean requiersShapeUpdate = true;
-    private Bitmap clipBitmap;
-
-    final Path rectView = new Path();
-
-    public ShapeOfView(@NonNull Context context) {
-        super(context);
-        init(context, null);
+    override fun setBackground(background: Drawable) {
+        // disabled here, please set a background to to this view child
+        // super.setBackground(background);
     }
 
-    public ShapeOfView(@NonNull Context context, @Nullable AttributeSet attrs) {
-        super(context, attrs);
-        init(context, attrs);
+    override fun setBackgroundResource(resid: Int) {
+        // disabled here, please set a background to to this view child
+        // super.setBackgroundResource(resid);
     }
 
-    public ShapeOfView(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs, defStyleAttr);
-        init(context, attrs);
+    override fun setBackgroundColor(color: Int) {
+        // disabled here, please set a background to to this view child
+        // super.setBackgroundColor(color);
     }
 
-    @Override
-    public void setBackground(Drawable background) {
-        //disabled here, please set a background to to this view child
-        //super.setBackground(background);
-    }
-
-    @Override
-    public void setBackgroundResource(int resid) {
-        //disabled here, please set a background to to this view child
-        //super.setBackgroundResource(resid);
-    }
-
-    @Override
-    public void setBackgroundColor(int color) {
-        //disabled here, please set a background to to this view child
-        //super.setBackgroundColor(color);
-    }
-
-    private void init(Context context, AttributeSet attrs) {
-        clipPaint.setAntiAlias(true);
-
-        setDrawingCacheEnabled(true);
-
-        setWillNotDraw(false);
-
-        clipPaint.setColor(Color.BLUE);
-        clipPaint.setStyle(Paint.Style.FILL);
-        clipPaint.setStrokeWidth(1);
-
-        if(Build.VERSION.SDK_INT <= Build.VERSION_CODES.O_MR1){
-            clipPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.DST_IN));
-            setLayerType(LAYER_TYPE_SOFTWARE, clipPaint); //Only works for software layers
+    init {
+        clipPaint.isAntiAlias = true
+        isDrawingCacheEnabled = true
+        setWillNotDraw(false)
+        clipPaint.color = Color.BLUE
+        clipPaint.style = Paint.Style.FILL
+        clipPaint.strokeWidth = 1f
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.O_MR1) {
+            clipPaint.xfermode = PorterDuffXfermode(PorterDuff.Mode.DST_IN)
+            setLayerType(LAYER_TYPE_SOFTWARE, clipPaint) // Only works for software layers
         } else {
-            clipPaint.setXfermode(pdMode);
-            setLayerType(LAYER_TYPE_SOFTWARE, null); //Only works for software layers
+            clipPaint.xfermode = pdMode
+            setLayerType(LAYER_TYPE_SOFTWARE, null) // Only works for software layers
         }
     }
 
-    protected int dpToPx(float dp) {
-        return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, Resources.getSystem().getDisplayMetrics());
+    protected fun dpToPx(dp: Float): Int {
+        return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, Resources.getSystem().displayMetrics).toInt()
     }
 
-    @Override
-    protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
-        super.onLayout(changed, left, top, right, bottom);
+    override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
+        super.onLayout(changed, left, top, right, bottom)
         if (changed) {
-            requiresShapeUpdate();
+            requiresShapeUpdate()
         }
     }
 
-    private boolean requiresBitmap() {
-        return isInEditMode() || (clipManager != null && clipManager.requiresBitmap()) || drawable != null;
+    private fun requiresBitmap(): Boolean {
+        return isInEditMode || clipManager.requiresBitmap() || drawable != null
     }
 
-    public void setDrawable(Drawable drawable) {
-        this.drawable = drawable;
-        requiresShapeUpdate();
+    fun setDrawable(drawable: Drawable?) {
+        this.drawable = drawable
+        requiresShapeUpdate()
     }
 
-    public void setDrawable(int redId) {
-        setDrawable(AppCompatResources.getDrawable(getContext(), redId));
+    fun setDrawable(redId: Int) {
+        setDrawable(AppCompatResources.getDrawable(context, redId))
     }
 
-    @Override
-    protected void dispatchDraw(Canvas canvas) {
-        super.dispatchDraw(canvas);
-
+    override fun dispatchDraw(canvas: Canvas) {
+        super.dispatchDraw(canvas)
         if (requiersShapeUpdate) {
-            calculateLayout(canvas.getWidth(), canvas.getHeight());
-            requiersShapeUpdate = false;
+            calculateLayout(canvas.width, canvas.height)
+            requiersShapeUpdate = false
         }
         if (requiresBitmap()) {
-            clipPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.DST_IN));
-            canvas.drawBitmap(clipBitmap, 0, 0, clipPaint);
+            clipPaint.xfermode = PorterDuffXfermode(PorterDuff.Mode.DST_IN)
+            canvas.drawBitmap(clipBitmap!!, 0f, 0f, clipPaint)
         } else {
-            if(Build.VERSION.SDK_INT <= Build.VERSION_CODES.O_MR1){
-                canvas.drawPath(clipPath, clipPaint);
+            if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.O_MR1) {
+                canvas.drawPath(clipPath, clipPaint)
             } else {
-                canvas.drawPath(rectView, clipPaint);
+                canvas.drawPath(rectView, clipPaint)
             }
         }
-
-        if(Build.VERSION.SDK_INT <= Build.VERSION_CODES.O_MR1) {
-            setLayerType(LAYER_TYPE_HARDWARE, null);
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.O_MR1) {
+            setLayerType(LAYER_TYPE_HARDWARE, null)
         }
     }
 
-    private void calculateLayout(int width, int height) {
-        rectView.reset();
-        rectView.addRect(0f, 0f, 1f * getWidth(), 1f * getHeight(), Path.Direction.CW);
-
-        if (clipManager != null) {
-            if (width > 0 && height > 0) {
-                clipManager.setupClipLayout(width, height);
-                clipPath.reset();
-                clipPath.set(clipManager.createMask(width, height));
-
-                if (requiresBitmap()) {
-                    if (clipBitmap != null) {
-                        clipBitmap.recycle();
-                    }
-                    clipBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-                    final Canvas canvas = new Canvas(clipBitmap);
-
-                    if (drawable != null) {
-                        drawable.setBounds(0, 0, width, height);
-                        drawable.draw(canvas);
-                    } else {
-                        canvas.drawPath(clipPath, clipManager.getPaint());
-                    }
+    private fun calculateLayout(width: Int, height: Int) {
+        rectView.reset()
+        rectView.addRect(0f, 0f, 1f * getWidth(), 1f * getHeight(), Path.Direction.CW)
+        if (width > 0 && height > 0) {
+            clipManager.setupClipLayout(width, height)
+            clipPath.reset()
+            clipPath.set(clipManager.createMask(width, height))
+            if (requiresBitmap()) {
+                clipBitmap?.recycle()
+                val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+                clipBitmap = bitmap
+                val canvas = Canvas(bitmap)
+                if (drawable != null) {
+                    drawable!!.setBounds(0, 0, width, height)
+                    drawable!!.draw(canvas)
+                } else {
+                    canvas.drawPath(clipPath, clipManager.paint)
                 }
+            }
 
-                //invert the path for android P
-                if(Build.VERSION.SDK_INT > Build.VERSION_CODES.O_MR1) {
-                    final boolean success = rectView.op(clipPath, Path.Op.DIFFERENCE);
+            // Invert the path for android P
+            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.O_MR1) {
+                rectView.op(clipPath, Path.Op.DIFFERENCE)
+            }
+
+            // This needs to be fixed for 25.4.0
+            if (ViewCompat.getElevation(this) > 0f) {
+                try {
+                    setOutlineProvider(outlineProvider)
+                } catch (e: Exception) {
+                    e.printStackTrace()
                 }
+            }
+        }
+        postInvalidate()
+    }
 
-                //this needs to be fixed for 25.4.0
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && ViewCompat.getElevation(this) > 0f) {
+    override fun getOutlineProvider(): ViewOutlineProvider {
+        return object : ViewOutlineProvider() {
+            override fun getOutline(view: View, outline: Outline) {
+                val shadowConvexPath = clipManager.shadowConvexPath
+                if (shadowConvexPath != null) {
                     try {
-                        setOutlineProvider(getOutlineProvider());
-                    } catch (Exception e) {
-                        e.printStackTrace();
+                        outline.setConvexPath(shadowConvexPath)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
                     }
                 }
             }
         }
-
-        postInvalidate();
     }
 
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    @Override
-    public ViewOutlineProvider getOutlineProvider() {
-        return new ViewOutlineProvider() {
-            @Override
-            public void getOutline(View view, Outline outline) {
-                if (clipManager != null) {
-                    final Path shadowConvexPath = clipManager.getShadowConvexPath();
-                    if (shadowConvexPath != null) {
-                        try {
-                            outline.setConvexPath(shadowConvexPath);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-
-            }
-        };
+    fun setClipPathCreator(createClipPath: ClipPathCreator?) {
+        (clipManager as ClipPathManager?)!!.setClipPathCreator(createClipPath)
+        requiresShapeUpdate()
     }
 
-    public void setClipPathCreator(ClipPathManager.ClipPathCreator createClipPath) {
-        ((ClipPathManager) clipManager).setClipPathCreator(createClipPath);
-        requiresShapeUpdate();
+    fun requiresShapeUpdate() {
+        requiersShapeUpdate = true
+        postInvalidate()
     }
-
-    public void requiresShapeUpdate() {
-        this.requiersShapeUpdate = true;
-        postInvalidate();
-    }
-
 }

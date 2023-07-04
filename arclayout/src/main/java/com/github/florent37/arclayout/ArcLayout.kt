@@ -1,168 +1,143 @@
-package com.github.florent37.arclayout;
+package com.github.florent37.arclayout
 
-import android.content.Context;
-import android.content.res.TypedArray;
-import android.graphics.Path;
-import androidx.annotation.IntDef;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import android.util.AttributeSet;
+import android.content.Context
+import android.graphics.Path
+import android.util.AttributeSet
+import androidx.annotation.IntDef
+import com.github.florent37.arclayout.manager.ClipPathManager.ClipPathCreator
 
-import com.github.florent37.arclayout.manager.ClipPathManager;
-
-public class ArcLayout extends ShapeOfView {
-
-    public static final int POSITION_BOTTOM = 1;
-    public static final int POSITION_TOP = 2;
-    public static final int POSITION_LEFT = 3;
-    public static final int POSITION_RIGHT = 4;
-    public static final int CROP_INSIDE = 1;
-
-    public static final int CROP_OUTSIDE = 2;
+class ArcLayout @JvmOverloads constructor(
+    context: Context,
+    attrs: AttributeSet? = null,
+    defStyleAttr: Int = 0,
+) : ShapeOfView(context, attrs, defStyleAttr) {
     @ArcPosition
-    private int arcPosition = POSITION_TOP;
+    private var arcPosition = POSITION_TOP
+
     @CropDirection
-    private int cropDirection = CROP_INSIDE;
+    private var cropDirection = CROP_INSIDE
+    private var arcHeight = 0
 
-    private int arcHeight = 0;
-
-    public ArcLayout(@NonNull Context context) {
-        super(context);
-        init(context, null);
-    }
-
-    public ArcLayout(@NonNull Context context, @Nullable AttributeSet attrs) {
-        super(context, attrs);
-        init(context, attrs);
-    }
-
-    public ArcLayout(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs, defStyleAttr);
-        init(context, attrs);
-    }
-
-    private void init(Context context, AttributeSet attrs) {
+    init {
         if (attrs != null) {
-            final TypedArray attributes = context.obtainStyledAttributes(attrs, R.styleable.ArcLayout);
-            arcHeight = attributes.getDimensionPixelSize(R.styleable.ArcLayout_arc_height, arcHeight);
-            arcPosition = attributes.getInteger(R.styleable.ArcLayout_arc_position, arcPosition);
-            cropDirection = attributes.getInteger(R.styleable.ArcLayout_arc_cropDirection, cropDirection);
-            attributes.recycle();
+            val attributes = context.obtainStyledAttributes(attrs, R.styleable.ArcLayout)
+            arcHeight = attributes.getDimensionPixelSize(R.styleable.ArcLayout_arc_height, arcHeight)
+            arcPosition = attributes.getInteger(R.styleable.ArcLayout_arc_position, arcPosition)
+            cropDirection = attributes.getInteger(R.styleable.ArcLayout_arc_cropDirection, cropDirection)
+            attributes.recycle()
         }
-        super.setClipPathCreator(new ClipPathManager.ClipPathCreator() {
-            @Override
-            public Path createClipPath(int width, int height) {
-                final Path path = new Path();
-
-                final boolean isCropInside = cropDirection == CROP_INSIDE;
-
-                switch (arcPosition) {
-                    case POSITION_BOTTOM: {
-                        if (isCropInside) {
-                            path.moveTo(0, 0);
-                            path.lineTo(0, height);
-                            path.quadTo(width / 2, height - 2 * arcHeight, width, height);
-                            path.lineTo(width, 0);
-                            path.close();
-                        } else {
-                            path.moveTo(0, 0);
-                            path.lineTo(0, height - arcHeight);
-                            path.quadTo(width / 2, height + arcHeight, width, height - arcHeight);
-                            path.lineTo(width, 0);
-                            path.close();
+        super.setClipPathCreator(
+            object : ClipPathCreator {
+                override fun createClipPath(width: Int, height: Int): Path {
+                    val path = Path()
+                    val isCropInside = cropDirection == CROP_INSIDE
+                    when (arcPosition) {
+                        POSITION_BOTTOM -> {
+                            if (isCropInside) {
+                                path.moveTo(0f, 0f)
+                                path.lineTo(0f, height.toFloat())
+                                path.quadTo((width / 2).toFloat(), (height - 2 * arcHeight).toFloat(), width.toFloat(), height.toFloat())
+                                path.lineTo(width.toFloat(), 0f)
+                                path.close()
+                            } else {
+                                path.moveTo(0f, 0f)
+                                path.lineTo(0f, (height - arcHeight).toFloat())
+                                path.quadTo((width / 2).toFloat(), (height + arcHeight).toFloat(), width.toFloat(), (height - arcHeight).toFloat())
+                                path.lineTo(width.toFloat(), 0f)
+                                path.close()
+                            }
                         }
-                        break;
+
+                        POSITION_TOP -> if (isCropInside) {
+                            path.moveTo(0f, height.toFloat())
+                            path.lineTo(0f, 0f)
+                            path.quadTo((width / 2).toFloat(), (2 * arcHeight).toFloat(), width.toFloat(), 0f)
+                            path.lineTo(width.toFloat(), height.toFloat())
+                            path.close()
+                        } else {
+                            path.moveTo(0f, arcHeight.toFloat())
+                            path.quadTo((width / 2).toFloat(), -arcHeight.toFloat(), width.toFloat(), arcHeight.toFloat())
+                            path.lineTo(width.toFloat(), height.toFloat())
+                            path.lineTo(0f, height.toFloat())
+                            path.close()
+                        }
+
+                        POSITION_LEFT -> if (isCropInside) {
+                            path.moveTo(width.toFloat(), 0f)
+                            path.lineTo(0f, 0f)
+                            path.quadTo((arcHeight * 2).toFloat(), (height / 2).toFloat(), 0f, height.toFloat())
+                            path.lineTo(width.toFloat(), height.toFloat())
+                            path.close()
+                        } else {
+                            path.moveTo(width.toFloat(), 0f)
+                            path.lineTo(arcHeight.toFloat(), 0f)
+                            path.quadTo(-arcHeight.toFloat(), (height / 2).toFloat(), arcHeight.toFloat(), height.toFloat())
+                            path.lineTo(width.toFloat(), height.toFloat())
+                            path.close()
+                        }
+
+                        POSITION_RIGHT -> if (isCropInside) {
+                            path.moveTo(0f, 0f)
+                            path.lineTo(width.toFloat(), 0f)
+                            path.quadTo((width - arcHeight * 2).toFloat(), (height / 2).toFloat(), width.toFloat(), height.toFloat())
+                            path.lineTo(0f, height.toFloat())
+                            path.close()
+                        } else {
+                            path.moveTo(0f, 0f)
+                            path.lineTo((width - arcHeight).toFloat(), 0f)
+                            path.quadTo((width + arcHeight).toFloat(), (height / 2).toFloat(), (width - arcHeight).toFloat(), height.toFloat())
+                            path.lineTo(0f, height.toFloat())
+                            path.close()
+                        }
                     }
-                    case POSITION_TOP:
-                        if (isCropInside) {
-                            path.moveTo(0, height);
-                            path.lineTo(0, 0);
-                            path.quadTo(width / 2, 2 * arcHeight, width, 0);
-                            path.lineTo(width, height);
-                            path.close();
-                        } else {
-                            path.moveTo(0, arcHeight);
-                            path.quadTo(width / 2, -arcHeight, width, arcHeight);
-                            path.lineTo(width, height);
-                            path.lineTo(0, height);
-                            path.close();
-                        }
-                        break;
-                    case POSITION_LEFT:
-                        if (isCropInside) {
-                            path.moveTo(width, 0);
-                            path.lineTo(0, 0);
-                            path.quadTo(arcHeight * 2, height / 2, 0, height);
-                            path.lineTo(width, height);
-                            path.close();
-                        } else {
-                            path.moveTo(width, 0);
-                            path.lineTo(arcHeight, 0);
-                            path.quadTo(-arcHeight, height / 2, arcHeight, height);
-                            path.lineTo(width, height);
-                            path.close();
-                        }
-                        break;
-                    case POSITION_RIGHT:
-                        if (isCropInside) {
-                            path.moveTo(0, 0);
-                            path.lineTo(width, 0);
-                            path.quadTo(width - arcHeight * 2, height / 2, width, height);
-                            path.lineTo(0, height);
-                            path.close();
-                        } else {
-                            path.moveTo(0, 0);
-                            path.lineTo(width - arcHeight, 0);
-                            path.quadTo(width + arcHeight, height / 2, width - arcHeight, height);
-                            path.lineTo(0, height);
-                            path.close();
-                        }
-                        break;
-
+                    return path
                 }
-                return path;
-            }
 
-            @Override
-            public boolean requiresBitmap() {
-                return false;
-            }
-        });
+                override fun requiresBitmap(): Boolean {
+                    return false
+                }
+            },
+        )
     }
 
-
-    public int getArcPosition() {
-        return arcPosition;
+    fun getArcPosition(): Int {
+        return arcPosition
     }
 
-    public void setArcPosition(@ArcPosition int arcPosition) {
-        this.arcPosition = arcPosition;
-        requiresShapeUpdate();
+    fun setArcPosition(@ArcPosition arcPosition: Int) {
+        this.arcPosition = arcPosition
+        requiresShapeUpdate()
     }
 
-    public int getCropDirection() {
-        return cropDirection;
+    fun getCropDirection(): Int {
+        return cropDirection
     }
 
-    public void setCropDirection(@CropDirection int cropDirection) {
-        this.cropDirection = cropDirection;
-        requiresShapeUpdate();
+    fun setCropDirection(@CropDirection cropDirection: Int) {
+        this.cropDirection = cropDirection
+        requiresShapeUpdate()
     }
 
-    public int getArcHeight() {
-        return arcHeight;
+    fun getArcHeight(): Int {
+        return arcHeight
     }
 
-    public void setArcHeight(int arcHeight) {
-        this.arcHeight = arcHeight;
-        requiresShapeUpdate();
+    fun setArcHeight(arcHeight: Int) {
+        this.arcHeight = arcHeight
+        requiresShapeUpdate()
     }
 
-    @IntDef(value = {POSITION_BOTTOM, POSITION_TOP, POSITION_LEFT, POSITION_RIGHT})
-    public @interface ArcPosition {
-    }
+    @IntDef(value = [POSITION_BOTTOM, POSITION_TOP, POSITION_LEFT, POSITION_RIGHT])
+    annotation class ArcPosition
 
-    @IntDef(value = {CROP_INSIDE, CROP_OUTSIDE})
-    public @interface CropDirection {
+    @IntDef(value = [CROP_INSIDE, CROP_OUTSIDE])
+    annotation class CropDirection
+    companion object {
+        const val POSITION_BOTTOM = 1
+        const val POSITION_TOP = 2
+        const val POSITION_LEFT = 3
+        const val POSITION_RIGHT = 4
+        const val CROP_INSIDE = 1
+        const val CROP_OUTSIDE = 2
     }
 }
