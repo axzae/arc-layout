@@ -21,7 +21,7 @@ By using this version, you can:
 // build.gradle.kts (app module)
 
 dependencies {
-    implementation("com.axzae:arclayout:1.1.0")
+    implementation("com.axzae:arclayout:1.1.1")
 }
 ```
 

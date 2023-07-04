@@ -12,11 +12,24 @@ class ArcLayout @JvmOverloads constructor(
     defStyleAttr: Int = 0,
 ) : ShapeOfView(context, attrs, defStyleAttr) {
     @ArcPosition
-    private var arcPosition = POSITION_TOP
+    var arcPosition: Int = POSITION_TOP
+        set(value) {
+            field = value
+            requiresShapeUpdate()
+        }
 
     @CropDirection
-    private var cropDirection = CROP_INSIDE
-    private var arcHeight = 0
+    var cropDirection: Int = CROP_INSIDE
+        set(value) {
+            field = value
+            requiresShapeUpdate()
+        }
+
+    var arcHeight: Int = 0
+        set(value) {
+            field = value
+            requiresShapeUpdate()
+        }
 
     init {
         if (attrs != null) {
@@ -98,33 +111,6 @@ class ArcLayout @JvmOverloads constructor(
                 }
             },
         )
-    }
-
-    fun getArcPosition(): Int {
-        return arcPosition
-    }
-
-    fun setArcPosition(@ArcPosition arcPosition: Int) {
-        this.arcPosition = arcPosition
-        requiresShapeUpdate()
-    }
-
-    fun getCropDirection(): Int {
-        return cropDirection
-    }
-
-    fun setCropDirection(@CropDirection cropDirection: Int) {
-        this.cropDirection = cropDirection
-        requiresShapeUpdate()
-    }
-
-    fun getArcHeight(): Int {
-        return arcHeight
-    }
-
-    fun setArcHeight(arcHeight: Int) {
-        this.arcHeight = arcHeight
-        requiresShapeUpdate()
     }
 
     @IntDef(value = [POSITION_BOTTOM, POSITION_TOP, POSITION_LEFT, POSITION_RIGHT])

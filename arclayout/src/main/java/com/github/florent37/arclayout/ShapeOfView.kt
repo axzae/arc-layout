@@ -32,24 +32,30 @@ open class ShapeOfView @JvmOverloads constructor(
     private val clipPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val clipPath = Path()
     private var pdMode = PorterDuffXfermode(PorterDuff.Mode.DST_OUT)
-    private var drawable: Drawable? = null
+
+    var drawable: Drawable? = null
+        set(value) {
+            field = value
+            requiresShapeUpdate()
+        }
+
     private val clipManager: ClipManager = ClipPathManager()
     private var requiersShapeUpdate = true
     private var clipBitmap: Bitmap? = null
     private val rectView = Path()
 
     override fun setBackground(background: Drawable) {
-        // disabled here, please set a background to to this view child
+        // Disabled here, please set a background to this view child
         // super.setBackground(background);
     }
 
     override fun setBackgroundResource(resid: Int) {
-        // disabled here, please set a background to to this view child
+        // Disabled here, please set a background to this view child
         // super.setBackgroundResource(resid);
     }
 
     override fun setBackgroundColor(color: Int) {
-        // disabled here, please set a background to to this view child
+        // Disabled here, please set a background to this view child
         // super.setBackgroundColor(color);
     }
 
@@ -84,13 +90,8 @@ open class ShapeOfView @JvmOverloads constructor(
         return isInEditMode || clipManager.requiresBitmap() || drawable != null
     }
 
-    fun setDrawable(drawable: Drawable?) {
-        this.drawable = drawable
-        requiresShapeUpdate()
-    }
-
     fun setDrawable(redId: Int) {
-        setDrawable(AppCompatResources.getDrawable(context, redId))
+        drawable = AppCompatResources.getDrawable(context, redId)
     }
 
     override fun dispatchDraw(canvas: Canvas) {
