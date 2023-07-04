@@ -32,5 +32,5 @@ android {
 }
 
 dependencies {
-    implementation("androidx.appcompat:appcompat:1.0.0-beta01")
+    implementation("androidx.appcompat:appcompat:1.6.1")
 }

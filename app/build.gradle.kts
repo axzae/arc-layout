@@ -44,8 +44,8 @@ android {
 
 dependencies {
     implementation(project(":arclayout"))
-    implementation("androidx.appcompat:appcompat:1.0.0-beta01")
-    implementation("com.google.android.material:material:1.0.0-beta01")
-    implementation("de.hdodenhof:circleimageview:2.1.0")
+    implementation("androidx.appcompat:appcompat:1.6.1")
+    implementation("com.google.android.material:material:1.9.0")
+    implementation("de.hdodenhof:circleimageview:3.1.0")
     implementation("com.flaviofaria:kenburnsview:1.0.7")
 }
