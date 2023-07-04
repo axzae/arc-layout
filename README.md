@@ -4,7 +4,7 @@
 
 [![build](https://img.shields.io/github/actions/workflow/status/axzae/arc-layout/pre-merge.yaml?branch=main)][actions]
 [![github tag](https://img.shields.io/github/v/tag/axzae/arc-layout?label=github)][releases]
-[![maven central](https://img.shields.io/maven-central/v/com.axzae/arc-layout)][mavencentral]
+[![maven central](https://img.shields.io/maven-central/v/com.axzae/arclayout)][mavencentral]
 
 </p>
 
@@ -21,7 +21,7 @@ By using this version, you can:
 // build.gradle.kts (app module)
 
 dependencies {
-    implementation("com.axzae:arc-layout:1.1.0")
+    implementation("com.axzae:arclayout:1.1.0")
 }
 ```
 
